@@ -241,7 +241,8 @@ fun ReceiptScannerBottomSheet(
             }
 
             // Scanning Viewfinder / Preview if an image is loaded
-            if (scannedBitmap != null) {
+            val currentBitmap = scannedBitmap
+            if (currentBitmap != null) {
                 item {
                     Surface(
                         shape = RoundedCornerShape(16.dp),
@@ -253,7 +254,7 @@ fun ReceiptScannerBottomSheet(
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
                             Image(
-                                bitmap = scannedBitmap!!.asImageBitmap(),
+                                bitmap = currentBitmap.asImageBitmap(),
                                 contentDescription = "Scanned Receipt",
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
@@ -295,13 +296,14 @@ fun ReceiptScannerBottomSheet(
             }
 
             // OCR Status Message
-            if (ocrStatusMessage != null && !isProcessing) {
+            val currentStatusMessage = ocrStatusMessage
+            if (currentStatusMessage != null && !isProcessing) {
                 item {
                     Text(
-                        text = ocrStatusMessage!!,
+                        text = currentStatusMessage,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (ocrStatusMessage!!.startsWith("Extracted")) EmeraldAccent else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (currentStatusMessage.startsWith("Extracted")) EmeraldAccent else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

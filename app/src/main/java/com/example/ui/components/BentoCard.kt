@@ -1,14 +1,20 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -17,76 +23,72 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.LocalCustomColors
-import com.example.ui.theme.ObsidianBorder
-import com.example.ui.theme.ObsidianBorderSubtle
-import com.example.ui.theme.ObsidianElevated
-import com.example.ui.theme.ObsidianSurface
 
+/**
+ * NeoPOP "extruded block" card.
+ *
+ * Two stacked layers create the tactile illusion:
+ *  - a flat, solid-color [depth]-offset slab behind (customColors.extrusionShadow)
+ *  - the content face on top, which slides down onto the slab on press
+ *    and springs back on release — the signature NeoPOP "push".
+ *
+ * Deliberately flat: no blur, no soft elevation shadow — the depth is a
+ * hard color block, not a shadow.
+ */
 @Composable
 fun BentoCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(20.dp),
-    borderWidth: Dp = 1.dp,
+    shape: Shape = RoundedCornerShape(4.dp),
+    borderWidth: Dp = 2.dp,
     borderColor: Color? = null,
     borderBrush: Brush? = null,
     backgroundColor: Color? = null,
     glowBrush: Brush? = null,
+    depth: Dp = 6.dp,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val customColors = LocalCustomColors.current
-    val effectiveBg = backgroundColor ?: if (customColors.isDark) ObsidianSurface else customColors.bentoCardBg
-    
-    val effectiveBorderBrush = borderBrush ?: if (borderColor != null) {
-        Brush.linearGradient(listOf(borderColor, borderColor))
-    } else if (customColors.isDark) {
-        Brush.linearGradient(
-            colors = listOf(
-                ObsidianBorder,
-                ObsidianBorderSubtle,
-                Color(0xFF2D374D).copy(alpha = 0.6f)
-            )
-        )
-    } else {
-        Brush.linearGradient(listOf(customColors.bentoBorder, customColors.bentoBorder))
-    }
+    val effectiveBg = backgroundColor ?: customColors.bentoCardBg
+    val effectiveBorderColor = borderColor ?: customColors.bentoBorderStrong
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val faceOffset by animateDpAsState(
+        targetValue = if (isPressed) depth else 0.dp,
+        animationSpec = tween(durationMillis = 90),
+        label = "neopop-press-offset"
+    )
 
     val clickModifier = if (onClick != null) {
-        Modifier.clickable(onClick = onClick)
+        Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick
+        )
     } else Modifier
 
-    Surface(
-        modifier = modifier
-            .clip(shape)
-            .then(clickModifier),
-        shape = shape,
-        color = effectiveBg,
-        border = BorderStroke(borderWidth, effectiveBorderBrush),
-        tonalElevation = 4.dp
-    ) {
-        val defaultInnerGradient = if (customColors.isDark) {
-            Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFF161C28).copy(alpha = 0.45f),
-                    Color(0xFF0D111A).copy(alpha = 0.95f)
-                )
-            )
-        } else {
-            Brush.verticalGradient(
-                colors = listOf(
-                    Color.White,
-                    Color(0xFFF8FAFC)
-                )
-            )
-        }
-
+    Box(modifier = modifier.padding(end = depth, bottom = depth)) {
+        // Extrusion slab — solid flat block, fixed position, never moves.
         Box(
             modifier = Modifier
-                .background(glowBrush ?: defaultInnerGradient)
+                .matchParentSize()
+                .offset(x = depth, y = depth)
+                .clip(shape)
+                .background(customColors.extrusionShadow)
+        )
+
+        // Face — rests lifted by `depth`; slides onto the slab when pressed.
+        Box(
+            modifier = Modifier
+                .offset(x = faceOffset, y = faceOffset)
+                .clip(shape)
+                .background(glowBrush ?: Brush.linearGradient(listOf(effectiveBg, effectiveBg)))
+                .border(borderWidth, effectiveBorderColor, shape)
+                .then(clickModifier)
                 .padding(16.dp)
         ) {
             content()
         }
     }
 }
-

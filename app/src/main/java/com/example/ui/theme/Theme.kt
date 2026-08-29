@@ -15,7 +15,8 @@ import com.example.data.model.ThemePalette
 
 /**
  * Semantic tokens extending Material3's [androidx.compose.material3.ColorScheme].
- * Holds luxury-only roles — bento, glow, shimmer, gradients — that Material doesn't model.
+ * Holds NeoPOP-only roles — extrusion shadows, glows, shimmer — that Material
+ * doesn't model on its own.
  */
 data class CustomThemeColors(
     // Bento & cards
@@ -48,28 +49,33 @@ data class CustomThemeColors(
     val shimmerBase: Color,
     val shimmerHighlight: Color,
 
+    // NeoPOP extrusion — the "slab" a card/button sits on, and the thin
+    // highlight sliver traced along its top edge. Flat, no blur, offset only.
+    val extrusionShadow: Color,
+    val extrusionHighlight: Color,
+
     // Meta
     val isDark: Boolean
 ) {
-    /** Vertical obsidian fade for hero surfaces. */
+    /** Vertical charcoal fade for hero surfaces. */
     val heroGradient: Brush
         get() = Brush.verticalGradient(
             colors = listOf(bentoCardElevated, bentoCardBg)
         )
 
-    /** Brand mint → cyan sweep. */
+    /** Brand lime → cyan sweep — used sparingly, NeoPOP favors flat fills. */
     val brandMintBrush: Brush
         get() = Brush.linearGradient(
             colors = listOf(GradientMintStart, GradientMintEnd)
         )
 
-    /** Indigo → rose statement sweep. */
+    /** Violet → magenta statement sweep. */
     val brandIndigoBrush: Brush
         get() = Brush.linearGradient(
             colors = listOf(GradientIndigoStart, GradientIndigoEnd)
         )
 
-    /** Gold → rose premium sweep. */
+    /** Yellow → magenta premium sweep. */
     val brandGoldBrush: Brush
         get() = Brush.linearGradient(
             colors = listOf(GradientGoldStart, GradientGoldEnd)
@@ -106,11 +112,13 @@ val LocalCustomColors = staticCompositionLocalOf {
         info               = InfoIndigo,
         shimmerBase        = ShimmerBaseDark,
         shimmerHighlight   = ShimmerHighlightDark,
+        extrusionShadow    = NeoPopShadowDark,
+        extrusionHighlight = NeoPopHighlightDark,
         isDark             = true
     )
 }
 
-/** Access custom luxury tokens anywhere a [MaterialTheme] is in scope. */
+/** Access custom NeoPOP tokens anywhere a [MaterialTheme] is in scope. */
 val MaterialTheme.customColors: CustomThemeColors
     @Composable @ReadOnlyComposable get() = LocalCustomColors.current
 
@@ -122,15 +130,15 @@ fun createDarkColorScheme(palette: ThemePalette): androidx.compose.material3.Col
     val accentColor  = Color(palette.accentHex)
     return darkColorScheme(
         primary            = primaryColor,
-        onPrimary          = ObsidianBg,
+        onPrimary          = NeoPopPureBlack,
         primaryContainer   = ObsidianElevated,
         onPrimaryContainer = primaryColor,
         secondary          = accentColor,
-        onSecondary        = ObsidianBg,
+        onSecondary        = NeoPopPureBlack,
         secondaryContainer = ObsidianSurface,
         onSecondaryContainer = TextPrimaryDark,
         tertiary           = CyanAccent,
-        onTertiary         = ObsidianBg,
+        onTertiary         = NeoPopPureBlack,
         background         = ObsidianBg,
         onBackground       = TextPrimaryDark,
         surface            = ObsidianSurface,
@@ -143,9 +151,9 @@ fun createDarkColorScheme(palette: ThemePalette): androidx.compose.material3.Col
         outline            = ObsidianBorder,
         outlineVariant     = ObsidianBorderSubtle,
         error              = ExpenseRose,
-        onError            = Color.White,
+        onError            = NeoPopPureWhite,
         errorContainer     = ExpenseRoseDeep,
-        onErrorContainer   = Color.White,
+        onErrorContainer   = NeoPopPureWhite,
         scrim              = ObsidianScrim
     )
 }
@@ -155,15 +163,15 @@ fun createLightColorScheme(palette: ThemePalette): androidx.compose.material3.Co
     val accentColor  = Color(palette.accentHex)
     return lightColorScheme(
         primary            = primaryColor,
-        onPrimary          = Color.White,
+        onPrimary          = NeoPopPureBlack,
         primaryContainer   = LightElevated,
         onPrimaryContainer = primaryColor,
         secondary          = accentColor,
-        onSecondary        = Color.White,
+        onSecondary        = NeoPopPureBlack,
         secondaryContainer = LightElevated,
         onSecondaryContainer = TextPrimaryLight,
         tertiary           = CyanAccent,
-        onTertiary         = Color.White,
+        onTertiary         = NeoPopPureBlack,
         background         = LightBg,
         onBackground       = TextPrimaryLight,
         surface            = LightSurface,
@@ -172,13 +180,13 @@ fun createLightColorScheme(palette: ThemePalette): androidx.compose.material3.Co
         onSurfaceVariant   = TextSecondaryLight,
         surfaceTint        = primaryColor,
         inverseSurface     = TextPrimaryLight,
-        inverseOnSurface   = Color.White,
+        inverseOnSurface   = NeoPopPureWhite,
         outline            = LightBorder,
         outlineVariant     = LightBorderSubtle,
-        error              = ExpenseRose,
-        onError           = Color.White,
+        error              = ExpenseRoseDeep,
+        onError            = NeoPopPureWhite,
         errorContainer     = CredRoseSoft,
-        onErrorContainer   = Color.White,
+        onErrorContainer   = NeoPopPureBlack,
         scrim              = LightScrim
     )
 }
@@ -203,8 +211,8 @@ fun LedgrTheme(
             bentoBorder        = ObsidianBorder,
             bentoBorderSubtle  = ObsidianBorderSubtle,
             bentoBorderStrong  = ObsidianBorderStrong,
-            glowColor          = primaryHex.copy(alpha = 0.20f),
-            glowColorStrong    = primaryHex.copy(alpha = 0.45f),
+            glowColor          = primaryHex.copy(alpha = 0.22f),
+            glowColorStrong    = primaryHex.copy(alpha = 0.5f),
             textPrimary        = TextPrimaryDark,
             textMuted          = TextSecondaryDark,
             textTertiary       = TextTertiaryDark,
@@ -218,6 +226,8 @@ fun LedgrTheme(
             info               = InfoIndigo,
             shimmerBase        = ShimmerBaseDark,
             shimmerHighlight   = ShimmerHighlightDark,
+            extrusionShadow    = NeoPopShadowDark,
+            extrusionHighlight = NeoPopHighlightDark,
             isDark             = true
         )
     } else {
@@ -227,8 +237,8 @@ fun LedgrTheme(
             bentoBorder        = LightBorder,
             bentoBorderSubtle  = LightBorderSubtle,
             bentoBorderStrong  = LightBorderStrong,
-            glowColor          = primaryHex.copy(alpha = 0.12f),
-            glowColorStrong    = primaryHex.copy(alpha = 0.28f),
+            glowColor          = primaryHex.copy(alpha = 0.14f),
+            glowColorStrong    = primaryHex.copy(alpha = 0.32f),
             textPrimary        = TextPrimaryLight,
             textMuted          = TextSecondaryLight,
             textTertiary       = TextTertiaryLight,
@@ -242,6 +252,8 @@ fun LedgrTheme(
             info               = InfoIndigoDeep,
             shimmerBase        = ShimmerBaseLight,
             shimmerHighlight   = ShimmerHighlightLight,
+            extrusionShadow    = NeoPopShadowLight,
+            extrusionHighlight = NeoPopHighlightLight,
             isDark             = false
         )
     }
