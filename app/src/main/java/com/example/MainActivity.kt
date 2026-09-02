@@ -388,6 +388,8 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
     if (showAddSavingsGoalDialog) {
         AddSavingsGoalDialog(
             accounts = accounts,
+            activeProfile = countryProfile,
+            defaultCurrency = if (countryProfile == CountryProfileType.EXPAT) expatCurrency else homeCurrency,
             onDismiss = { showAddSavingsGoalDialog = false },
             onSave = { goal -> viewModel.addSavingsGoal(goal) }
         )
@@ -396,6 +398,8 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
     if (showAddDebtEmiDialog) {
         AddDebtEmiDialog(
             friends = friends,
+            activeProfile = countryProfile,
+            defaultCurrency = if (countryProfile == CountryProfileType.EXPAT) expatCurrency else homeCurrency,
             onDismiss = { showAddDebtEmiDialog = false },
             onSave = { debt -> viewModel.addDebtEmi(debt) }
         )

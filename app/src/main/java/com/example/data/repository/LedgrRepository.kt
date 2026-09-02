@@ -43,6 +43,54 @@ class LedgrRepository(private val database: AppDatabase) {
         id
     }
 
+    suspend fun recordCrossProfileTransfer(
+        fromAccount: AccountEntity,
+        toAccount: AccountEntity,
+        fromAmount: Double,
+        toAmount: Double,
+        fxRate: Double,
+        notes: String = ""
+    ) = withContext(Dispatchers.IO) {
+        // 1. Deduct from source account in its currency
+        database.accountDao().updateBalance(fromAccount.id, -fromAmount)
+        // 2. Add to target account in its currency
+        database.accountDao().updateBalance(toAccount.id, toAmount)
+
+        // 3. Create outbound transaction
+        val outTx = TransactionEntity(
+            accountId = fromAccount.id,
+            type = TransactionType.TRANSFER,
+            amount = fromAmount,
+            currency = fromAccount.currency,
+            categoryId = 5,
+            date = System.currentTimeMillis(),
+            notes = "Transfer to ${toAccount.name}" + (if (notes.isNotBlank()) " • $notes" else "") + " (FX: $fxRate)",
+            targetAccountId = toAccount.id,
+            countryProfile = fromAccount.countryProfile,
+            transferFxRate = fxRate
+        )
+        val outTxId = database.transactionDao().insertTransaction(outTx)
+
+        // 4. Create inbound transaction
+        val inTx = TransactionEntity(
+            accountId = toAccount.id,
+            type = TransactionType.TRANSFER,
+            amount = toAmount,
+            currency = toAccount.currency,
+            categoryId = 5,
+            date = System.currentTimeMillis(),
+            notes = "Transfer from ${fromAccount.name}" + (if (notes.isNotBlank()) " • $notes" else "") + " (FX: $fxRate)",
+            targetAccountId = fromAccount.id,
+            countryProfile = toAccount.countryProfile,
+            transferFxRate = fxRate,
+            linkedTransactionId = outTxId
+        )
+        val inTxId = database.transactionDao().insertTransaction(inTx)
+
+        // 5. Link outTx to inTx
+        database.transactionDao().updateTransaction(outTx.copy(id = outTxId, linkedTransactionId = inTxId))
+    }
+
     suspend fun deleteTransaction(transaction: TransactionEntity) = withContext(Dispatchers.IO) {
         database.transactionDao().deleteTransaction(transaction)
         // Reverse account balance effect
@@ -55,8 +103,10 @@ class LedgrRepository(private val database: AppDatabase) {
             }
             TransactionType.TRANSFER -> {
                 database.accountDao().updateBalance(transaction.accountId, transaction.amount)
-                transaction.targetAccountId?.let { targetId ->
-                    database.accountDao().updateBalance(targetId, -transaction.amount)
+                if (transaction.transferFxRate == null) {
+                    transaction.targetAccountId?.let { targetId ->
+                        database.accountDao().updateBalance(targetId, -transaction.amount)
+                    }
                 }
             }
         }

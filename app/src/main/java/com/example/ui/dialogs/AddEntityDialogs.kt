@@ -278,12 +278,18 @@ fun EditAccountDialog(
 @Composable
 fun AddSavingsGoalDialog(
     accounts: List<AccountEntity>,
+    activeProfile: CountryProfileType = CountryProfileType.HOME,
+    defaultCurrency: String = "USD",
     onDismiss: () -> Unit,
     onSave: (SavingsGoalEntity) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var targetAmount by remember { mutableStateOf("") }
     var currentAmount by remember { mutableStateOf("0") }
+    var currency by remember { mutableStateOf(defaultCurrency) }
+    var countryProfile by remember {
+        mutableStateOf(if (activeProfile == CountryProfileType.EXPAT) "EXPAT" else "HOME")
+    }
     var linkedAccountId by remember { mutableStateOf<Long?>(accounts.firstOrNull()?.id) }
 
     AlertDialog(
@@ -304,7 +310,7 @@ fun AddSavingsGoalDialog(
                     OutlinedTextField(
                         value = targetAmount,
                         onValueChange = { targetAmount = it },
-                        label = { Text("Target ($)") },
+                        label = { Text("Target") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
@@ -319,14 +325,40 @@ fun AddSavingsGoalDialog(
                     )
                 }
 
-                Text("Linked Wallet Account (Optional)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(accounts) { acc ->
-                        FilterChip(
-                            selected = linkedAccountId == acc.id,
-                            onClick = { linkedAccountId = acc.id },
-                            label = { Text(acc.name) }
-                        )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = currency,
+                        onValueChange = { currency = it.uppercase() },
+                        label = { Text("Currency") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Text("Profile Category", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = countryProfile == "HOME",
+                        onClick = { countryProfile = "HOME" },
+                        label = { Text("Home Base") }
+                    )
+                    FilterChip(
+                        selected = countryProfile == "EXPAT",
+                        onClick = { countryProfile = "EXPAT" },
+                        label = { Text("Expat / Foreign") }
+                    )
+                }
+
+                if (accounts.isNotEmpty()) {
+                    Text("Linked Wallet Account (Optional)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(accounts) { acc ->
+                            FilterChip(
+                                selected = linkedAccountId == acc.id,
+                                onClick = { linkedAccountId = acc.id },
+                                label = { Text(acc.name) }
+                            )
+                        }
                     }
                 }
             }
@@ -341,6 +373,8 @@ fun AddSavingsGoalDialog(
                                 title = title,
                                 targetAmount = target,
                                 currentAmount = currentAmount.toDoubleOrNull() ?: 0.0,
+                                currency = currency,
+                                countryProfile = countryProfile,
                                 linkedAccountId = linkedAccountId
                             )
                         )
@@ -361,6 +395,8 @@ fun AddSavingsGoalDialog(
 @Composable
 fun AddDebtEmiDialog(
     friends: List<FriendEntity>,
+    activeProfile: CountryProfileType = CountryProfileType.HOME,
+    defaultCurrency: String = "USD",
     onDismiss: () -> Unit,
     onSave: (DebtEmiEntity) -> Unit
 ) {
@@ -369,6 +405,10 @@ fun AddDebtEmiDialog(
     var totalAmount by remember { mutableStateOf("") }
     var tenureMonths by remember { mutableStateOf("12") }
     var interestRate by remember { mutableStateOf("0") }
+    var currency by remember { mutableStateOf(defaultCurrency) }
+    var countryProfile by remember {
+        mutableStateOf(if (activeProfile == CountryProfileType.EXPAT) "EXPAT" else "HOME")
+    }
     var selectedFriendId by remember { mutableStateOf(friends.firstOrNull()?.id) }
 
     AlertDialog(
@@ -413,22 +453,44 @@ fun AddDebtEmiDialog(
                     OutlinedTextField(
                         value = totalAmount,
                         onValueChange = { totalAmount = it },
-                        label = { Text("Total Amount ($)") },
+                        label = { Text("Total Amount") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
                     )
 
-                    if (debtType == DebtType.EMI || debtType == DebtType.LOAN) {
-                        OutlinedTextField(
-                            value = tenureMonths,
-                            onValueChange = { tenureMonths = it },
-                            label = { Text("Tenure (Mos)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    OutlinedTextField(
+                        value = currency,
+                        onValueChange = { currency = it.uppercase() },
+                        label = { Text("Currency") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(0.8f)
+                    )
+                }
+
+                if (debtType == DebtType.EMI || debtType == DebtType.LOAN) {
+                    OutlinedTextField(
+                        value = tenureMonths,
+                        onValueChange = { tenureMonths = it },
+                        label = { Text("Tenure (Mos)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Text("Profile Category", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = countryProfile == "HOME",
+                        onClick = { countryProfile = "HOME" },
+                        label = { Text("Home Base") }
+                    )
+                    FilterChip(
+                        selected = countryProfile == "EXPAT",
+                        onClick = { countryProfile = "EXPAT" },
+                        label = { Text("Expat / Foreign") }
+                    )
                 }
             }
         },
@@ -447,7 +509,9 @@ fun AddDebtEmiDialog(
                                 totalAmount = tot,
                                 remainingAmount = tot,
                                 tenureMonths = months,
-                                monthlyPayment = monthly
+                                monthlyPayment = monthly,
+                                currency = currency,
+                                countryProfile = countryProfile
                             )
                         )
                         onDismiss()
@@ -459,6 +523,164 @@ fun AddDebtEmiDialog(
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun CrossProfileTransferDialog(
+    accounts: List<AccountEntity>,
+    exchangeRates: List<ExchangeRateEntity>,
+    onDismiss: () -> Unit,
+    onTransfer: (fromAccount: AccountEntity, toAccount: AccountEntity, fromAmount: Double, toAmount: Double, fxRate: Double, notes: String) -> Unit
+) {
+    var fromAccountId by remember { mutableStateOf(accounts.firstOrNull()?.id ?: 0L) }
+    var toAccountId by remember { mutableStateOf(accounts.getOrNull(1)?.id ?: accounts.firstOrNull()?.id ?: 0L) }
+    var fromAmountText by remember { mutableStateOf("") }
+    var customFxRateText by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+
+    val fromAcc = accounts.find { it.id == fromAccountId }
+    val toAcc = accounts.find { it.id == toAccountId }
+
+    val rateMap = remember(exchangeRates) {
+        exchangeRates.associate { "${it.fromCurrency.uppercase()}_${it.toCurrency.uppercase()}" to it.rate }
+    }
+
+    val defaultRate = remember(fromAcc, toAcc, rateMap) {
+        if (fromAcc == null || toAcc == null || fromAcc.currency.equals(toAcc.currency, ignoreCase = true)) {
+            1.0
+        } else {
+            val directKey = "${fromAcc.currency.uppercase()}_${toAcc.currency.uppercase()}"
+            val directRate = rateMap[directKey]
+            if (directRate != null && directRate > 0) directRate
+            else {
+                val inverseKey = "${toAcc.currency.uppercase()}_${fromAcc.currency.uppercase()}"
+                val inv = rateMap[inverseKey]
+                if (inv != null && inv > 0) 1.0 / inv else 1.0
+            }
+        }
+    }
+
+    val effectiveRate = customFxRateText.toDoubleOrNull() ?: defaultRate
+    val fromAmount = fromAmountText.toDoubleOrNull() ?: 0.0
+    val toAmount = fromAmount * effectiveRate
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = EmeraldAccent)
+                Text("Cross-Profile Transfer", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Transfer funds between your Domestic and Expat accounts with automatic FX conversion.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // From Account
+                Text("From Account", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(accounts) { acc ->
+                        val isSelected = acc.id == fromAccountId
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                fromAccountId = acc.id
+                                if (toAccountId == acc.id) {
+                                    toAccountId = accounts.firstOrNull { it.id != acc.id }?.id ?: acc.id
+                                }
+                            },
+                            label = { Text("${acc.name} (${acc.countryProfile} · ${acc.currency})") }
+                        )
+                    }
+                }
+
+                // To Account
+                Text("To Account", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(accounts.filter { it.id != fromAccountId }) { acc ->
+                        val isSelected = acc.id == toAccountId
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { toAccountId = acc.id },
+                            label = { Text("${acc.name} (${acc.countryProfile} · ${acc.currency})") }
+                        )
+                    }
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = fromAmountText,
+                        onValueChange = { fromAmountText = it },
+                        label = { Text("Send (${fromAcc?.currency ?: "USD"})") },
+                        placeholder = { Text("0.00") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = if (customFxRateText.isNotEmpty()) customFxRateText else String.format(java.util.Locale.US, "%.4f", defaultRate),
+                        onValueChange = { customFxRateText = it },
+                        label = { Text("FX Rate") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Calculation preview
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Destination Receives:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = "${toAcc?.currency ?: "USD"} ${String.format(java.util.Locale.US, "%,.2f", toAmount)}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = EmeraldAccent
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text("Transfer Note (Optional)") },
+                    placeholder = { Text("e.g. Monthly Remittance, FX Transfer") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (fromAcc != null && toAcc != null && fromAmount > 0 && effectiveRate > 0) {
+                        onTransfer(fromAcc, toAcc, fromAmount, toAmount, effectiveRate, notes)
+                        onDismiss()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = EmeraldAccent),
+                enabled = fromAcc != null && toAcc != null && fromAmount > 0
+            ) {
+                Text("Execute Transfer", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
     )
 }
 

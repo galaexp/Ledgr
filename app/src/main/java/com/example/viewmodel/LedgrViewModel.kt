@@ -23,7 +23,8 @@ data class DashboardSpendingPace(
     val dailyBurnRate: Double,
     val projectedMonthEndSpend: Double,
     val daysRemainingInMonth: Int,
-    val isPaceSafe: Boolean
+    val isPaceSafe: Boolean,
+    val unsafeProfileTag: String? = null
 )
 
 data class CategoryBudgetProgress(
@@ -169,6 +170,33 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
     val exchangeRates: Flow<List<ExchangeRateEntity>> = repository.allRates
     val recurringTransactions: Flow<List<RecurringTransactionEntity>> = repository.allRecurring
 
+    // Filtered Budgets by Country Profile
+    val filteredBudgets: StateFlow<List<BudgetEntity>> = combine(budgets, _countryProfile) { bgList, profile ->
+        when (profile) {
+            CountryProfileType.ALL -> bgList
+            CountryProfileType.HOME -> bgList.filter { it.countryProfile == "HOME" }
+            CountryProfileType.EXPAT -> bgList.filter { it.countryProfile == "EXPAT" }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Filtered Savings Goals by Country Profile
+    val filteredSavingsGoals: StateFlow<List<SavingsGoalEntity>> = combine(savingsGoals, _countryProfile) { sgList, profile ->
+        when (profile) {
+            CountryProfileType.ALL -> sgList
+            CountryProfileType.HOME -> sgList.filter { it.countryProfile == "HOME" }
+            CountryProfileType.EXPAT -> sgList.filter { it.countryProfile == "EXPAT" }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Filtered Debt & EMIs by Country Profile
+    val filteredDebtEmis: StateFlow<List<DebtEmiEntity>> = combine(debtEmis, _countryProfile) { deList, profile ->
+        when (profile) {
+            CountryProfileType.ALL -> deList
+            CountryProfileType.HOME -> deList.filter { it.countryProfile == "HOME" }
+            CountryProfileType.EXPAT -> deList.filter { it.countryProfile == "EXPAT" }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Combined filter criteria flow
     private val filterCriteria: Flow<FilterCriteria> = combine(
         _searchQuery,
@@ -220,49 +248,76 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
 
     // Net Worth Calculation (incorporating FX rates & active profile conversion)
     val netWorthSummary: StateFlow<Double> = combine(
-        accounts,
+        filteredAccounts,
         exchangeRates,
-        _countryProfile,
-        _primaryCurrency,
-        _expatCurrency
-    ) { accList, rates, country, homeCurr, expatCurr ->
-        val targetCurrency = when (country) {
-            CountryProfileType.HOME -> homeCurr
-            CountryProfileType.EXPAT -> expatCurr
-            CountryProfileType.ALL -> homeCurr
-        }
-        val rateMap = rates.associate { "${it.fromCurrency}_${it.toCurrency}" to it.rate }
+        activeCurrency
+    ) { accList, rates, targetCurrency ->
+        val rateMap = rates.associate { "${it.fromCurrency.uppercase()}_${it.toCurrency.uppercase()}" to it.rate }
         var total = 0.0
-
         for (acc in accList) {
-            val shouldInclude = when (country) {
-                CountryProfileType.ALL -> true
-                CountryProfileType.HOME -> acc.countryProfile == "HOME"
-                CountryProfileType.EXPAT -> acc.countryProfile == "EXPAT"
-            }
-            if (shouldInclude) {
-                if (acc.currency.equals(targetCurrency, ignoreCase = true)) {
-                    total += acc.balance
-                } else {
-                    val directRate = rateMap["${acc.currency}_$targetCurrency"]
-                    if (directRate != null && directRate > 0) {
-                        total += acc.balance * directRate
-                    } else {
-                        val inverseRate = rateMap["${targetCurrency}_${acc.currency}"]
-                        if (inverseRate != null && inverseRate > 0) {
-                            total += acc.balance / inverseRate
-                        } else {
-                            total += acc.balance
-                        }
-                    }
-                }
-            }
+            total += CurrencyConverter.convert(acc.balance, acc.currency, targetCurrency, rateMap)
         }
         total
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    // Live Spending Pace Calculator
-    val spendingPace: StateFlow<DashboardSpendingPace> = combine(transactions, budgets) { txList, budgetList ->
+    // 30-Day Net Worth Trend Sparkline for active profile
+    val netWorthTrend: StateFlow<List<Double>> = combine(
+        netWorthSummary,
+        filteredTransactions,
+        exchangeRates,
+        activeCurrency
+    ) { currentNetWorth, txList, rates, targetCurrency ->
+        val rateMap = rates.associate { "${it.fromCurrency.uppercase()}_${it.toCurrency.uppercase()}" to it.rate }
+        val now = System.currentTimeMillis()
+        val dayMillis = 24L * 60 * 60 * 1000
+
+        val dailyNetChanges = DoubleArray(30) { 0.0 }
+        for (tx in txList) {
+            val daysAgo = ((now - tx.date) / dayMillis).toInt()
+            if (daysAgo in 0..29) {
+                val converted = CurrencyConverter.convert(tx.amount, tx.currency, targetCurrency, rateMap)
+                when (tx.type) {
+                    TransactionType.INCOME -> dailyNetChanges[29 - daysAgo] += converted
+                    TransactionType.EXPENSE -> dailyNetChanges[29 - daysAgo] -= converted
+                    TransactionType.TRANSFER -> { /* internal transfer net change is 0 */ }
+                }
+            }
+        }
+
+        val points = DoubleArray(30)
+        points[29] = currentNetWorth
+        for (i in 28 downTo 0) {
+            points[i] = points[i + 1] - dailyNetChanges[i + 1]
+        }
+        points.toList()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), List(30) { 0.0 })
+
+    // Vaults Total Summary for active profile (Total Saved, Total Target)
+    val vaultsSummary: StateFlow<Pair<Double, Double>> = combine(
+        filteredSavingsGoals,
+        exchangeRates,
+        activeCurrency
+    ) { goals, rates, targetCurrency ->
+        val rateMap = rates.associate { "${it.fromCurrency.uppercase()}_${it.toCurrency.uppercase()}" to it.rate }
+        var totalSaved = 0.0
+        var totalTarget = 0.0
+        for (g in goals) {
+            totalSaved += CurrencyConverter.convert(g.currentAmount, g.currency, targetCurrency, rateMap)
+            totalTarget += CurrencyConverter.convert(g.targetAmount, g.currency, targetCurrency, rateMap)
+        }
+        Pair(totalSaved, totalTarget)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Pair(0.0, 0.0))
+
+    // Live Spending Pace Calculator (profile-aware & currency-converted)
+    val spendingPace: StateFlow<DashboardSpendingPace> = combine(
+        filteredTransactions,
+        filteredBudgets,
+        exchangeRates,
+        activeCurrency,
+        _countryProfile
+    ) { txList, budgetList, rates, targetCurrency, country ->
+        val rateMap = rates.associate { "${it.fromCurrency.uppercase()}_${it.toCurrency.uppercase()}" to it.rate }
+
         val cal = Calendar.getInstance()
         val currentDay = cal.get(Calendar.DAY_OF_MONTH)
         val maxDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
@@ -274,12 +329,23 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
         val monthStart = cal.timeInMillis
 
         val monthExpenses = txList.filter { it.date >= monthStart && it.type == TransactionType.EXPENSE }
-        val totalSpent = monthExpenses.sumOf { it.amount }
-        val totalLimit = budgetList.sumOf { it.monthlyLimit }.let { if (it <= 0) 0.0 else it }
+        val totalSpent = monthExpenses.sumOf { tx ->
+            CurrencyConverter.convert(tx.amount, tx.currency, targetCurrency, rateMap)
+        }
+        val totalLimit = budgetList.sumOf { bg ->
+            CurrencyConverter.convert(bg.monthlyLimit, bg.currency, targetCurrency, rateMap)
+        }.let { if (it <= 0) 0.0 else it }
 
         val dailyBurn = if (currentDay > 0) totalSpent / currentDay else totalSpent
         val projected = totalSpent + (dailyBurn * daysRemaining)
         val isSafe = if (totalLimit <= 0) true else projected <= totalLimit
+
+        val profileTag = when {
+            !isSafe && country == CountryProfileType.ALL -> "GLOBAL"
+            !isSafe && country == CountryProfileType.HOME -> "DOMESTIC"
+            !isSafe && country == CountryProfileType.EXPAT -> "EXPAT"
+            else -> null
+        }
 
         DashboardSpendingPace(
             spentThisMonth = totalSpent,
@@ -287,7 +353,8 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
             dailyBurnRate = dailyBurn,
             projectedMonthEndSpend = projected,
             daysRemainingInMonth = daysRemaining,
-            isPaceSafe = isSafe
+            isPaceSafe = isSafe,
+            unsafeProfileTag = profileTag
         )
     }.stateIn(
         viewModelScope,
@@ -295,8 +362,16 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
         DashboardSpendingPace(0.0, 0.0, 0.0, 0.0, 15, true)
     )
 
-    // Category Budgets Progress
-    val categoryBudgetsProgress: StateFlow<List<CategoryBudgetProgress>> = combine(categories, budgets, transactions) { catList, bgList, txList ->
+    // Category Budgets Progress (profile-aware & currency-converted)
+    val categoryBudgetsProgress: StateFlow<List<CategoryBudgetProgress>> = combine(
+        categories,
+        filteredBudgets,
+        filteredTransactions,
+        exchangeRates,
+        activeCurrency
+    ) { catList, bgList, txList, rates, targetCurrency ->
+        val rateMap = rates.associate { "${it.fromCurrency.uppercase()}_${it.toCurrency.uppercase()}" to it.rate }
+
         val cal = Calendar.getInstance()
         cal.set(Calendar.DAY_OF_MONTH, 1)
         cal.set(Calendar.HOUR_OF_DAY, 0)
@@ -305,11 +380,16 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
         val budgetMap = bgList.associateBy { it.categoryId }
         val spendMap = txList.filter { it.date >= monthStart && it.type == TransactionType.EXPENSE }
             .groupBy { it.categoryId }
-            .mapValues { (_, txs) -> txs.sumOf { it.amount } }
+            .mapValues { (_, txs) ->
+                txs.sumOf { tx -> CurrencyConverter.convert(tx.amount, tx.currency, targetCurrency, rateMap) }
+            }
 
         catList.filter { !it.isIncome }.map { cat ->
             val budget = budgetMap[cat.id]
-            val limit = budget?.monthlyLimit ?: if (cat.budgetLimit > 0) cat.budgetLimit else 0.0
+            val rawLimit = budget?.monthlyLimit ?: if (cat.budgetLimit > 0) cat.budgetLimit else 0.0
+            val limit = if (budget != null) {
+                CurrencyConverter.convert(budget.monthlyLimit, budget.currency, targetCurrency, rateMap)
+            } else rawLimit
             val spent = spendMap[cat.id] ?: 0.0
             val pct = if (limit > 0) (spent / limit).toFloat() else 0f
             CategoryBudgetProgress(
@@ -478,6 +558,17 @@ class LedgrViewModel(application: Application) : AndroidViewModel(application) {
         linkedAccountId: Long?
     ) = viewModelScope.launch {
         repository.recordSettlement(settlement, linkedAccountId)
+    }
+
+    fun recordCrossProfileTransfer(
+        fromAccount: AccountEntity,
+        toAccount: AccountEntity,
+        fromAmount: Double,
+        toAmount: Double,
+        fxRate: Double,
+        notes: String = ""
+    ) = viewModelScope.launch {
+        repository.recordCrossProfileTransfer(fromAccount, toAccount, fromAmount, toAmount, fxRate, notes)
     }
 
     fun importCsvTransactions(transactions: List<TransactionEntity>) = viewModelScope.launch {

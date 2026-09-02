@@ -106,3 +106,26 @@ object CountryCurrencyCatalog {
     }
 }
 
+object CurrencyConverter {
+    fun convert(
+        amount: Double,
+        fromCurrency: String,
+        toCurrency: String,
+        rateMap: Map<String, Double>
+    ): Double {
+        if (fromCurrency.isBlank() || toCurrency.isBlank() || fromCurrency.equals(toCurrency, ignoreCase = true)) {
+            return amount
+        }
+        val directKey = "${fromCurrency.uppercase()}_${toCurrency.uppercase()}"
+        val directRate = rateMap[directKey]
+        if (directRate != null && directRate > 0) return amount * directRate
+
+        val inverseKey = "${toCurrency.uppercase()}_${fromCurrency.uppercase()}"
+        val inverseRate = rateMap[inverseKey]
+        if (inverseRate != null && inverseRate > 0) return amount / inverseRate
+
+        return amount
+    }
+}
+
+

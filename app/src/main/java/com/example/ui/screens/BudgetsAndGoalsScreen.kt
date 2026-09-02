@@ -46,10 +46,11 @@ fun BudgetsAndGoalsScreen(
     var selectedTab by remember { mutableStateOf(BudgetGoalTab.BUDGETS) }
 
     val categoryBudgets by viewModel.categoryBudgetsProgress.collectAsState()
-    val savingsGoals by viewModel.savingsGoals.collectAsState(initial = emptyList())
-    val debtEmis by viewModel.debtEmis.collectAsState(initial = emptyList())
-    val accounts by viewModel.accounts.collectAsState(initial = emptyList())
+    val savingsGoals by viewModel.filteredSavingsGoals.collectAsState()
+    val debtEmis by viewModel.filteredDebtEmis.collectAsState()
+    val accounts by viewModel.filteredAccounts.collectAsState()
     val currencySymbol by viewModel.currencySymbol.collectAsState()
+    val countryProfile by viewModel.countryProfile.collectAsState()
 
     var contributeGoalDialog by remember { mutableStateOf<SavingsGoalEntity?>(null) }
     var payDebtDialog by remember { mutableStateOf<DebtEmiEntity?>(null) }
@@ -468,12 +469,29 @@ fun SavingsGoalCard(
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(
-                        text = goal.title,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = goal.title,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(
+                                text = if (goal.countryProfile == "EXPAT") "EXPAT" else "HOME",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (goal.countryProfile == "EXPAT") MaterialTheme.colorScheme.tertiary else EmeraldAccent,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = "$currencySymbol${String.format(Locale.US, "%,.2f", goal.currentAmount)} of $currencySymbol${String.format(Locale.US, "%,.2f", goal.targetAmount)}",
                         fontFamily = FontFamily.Monospace,
@@ -538,6 +556,18 @@ fun DebtEmiCard(
                             fontWeight = FontWeight.Bold,
                             color = EmeraldAccent,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Text(
+                            text = if (debt.countryProfile == "EXPAT") "EXPAT" else "HOME",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (debt.countryProfile == "EXPAT") MaterialTheme.colorScheme.tertiary else EmeraldAccent,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
                 }

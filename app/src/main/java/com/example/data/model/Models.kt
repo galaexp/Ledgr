@@ -75,7 +75,9 @@ data class TransactionEntity(
     val targetAccountId: Long? = null, // For TRANSFER
     val splitExpenseId: Long? = null,
     val countryProfile: String = "HOME",
-    val isRecurringInstance: Boolean = false
+    val isRecurringInstance: Boolean = false,
+    val transferFxRate: Double? = null,
+    val linkedTransactionId: Long? = null
 )
 
 @Entity(tableName = "budgets")
@@ -95,6 +97,7 @@ data class SavingsGoalEntity(
     val targetAmount: Double,
     val currentAmount: Double,
     val currency: String = "USD",
+    val countryProfile: String = "HOME", // "HOME" or "EXPAT"
     val targetDate: Long = System.currentTimeMillis() + (90L * 24 * 60 * 60 * 1000), // 3 months default
     val linkedAccountId: Long? = null,
     val iconName: String = "savings",
@@ -115,6 +118,7 @@ data class DebtEmiEntity(
     val monthlyPayment: Double = 0.0,
     val dueDate: Long = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000),
     val currency: String = "USD",
+    val countryProfile: String = "HOME", // "HOME" or "EXPAT"
     val notes: String = "",
     val isSettled: Boolean = false
 )

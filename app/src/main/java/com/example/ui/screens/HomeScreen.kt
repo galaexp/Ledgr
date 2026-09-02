@@ -147,7 +147,7 @@ fun HomeScreen(
     val spendingPace    by viewModel.spendingPace.collectAsState()
     val friendBalances  by viewModel.friendBalances.collectAsState()
     val splitSummary    by viewModel.netSplitSummary.collectAsState()
-    val savingsGoals     by viewModel.savingsGoals.collectAsState(initial = emptyList())
+    val savingsGoals     by viewModel.filteredSavingsGoals.collectAsState()
     val youAreOwed = splitSummary.first
     val youOwe     = splitSummary.second
 
