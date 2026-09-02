@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.Fingerprint
@@ -22,8 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
-import com.example.ui.theme.ObsidianBg
-import com.example.ui.theme.ObsidianElevated
+import com.example.ui.theme.customColors
 
 @Composable
 fun PinLockScreen(
@@ -32,6 +30,7 @@ fun PinLockScreen(
     isBiometricAvailable: Boolean = true,
     onBiometricClick: () -> Unit = onUnlocked
 ) {
+    val colors = MaterialTheme.customColors
     var enteredPin by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
 
@@ -62,7 +61,7 @@ fun PinLockScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ObsidianBg)
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -76,8 +75,8 @@ fun PinLockScreen(
                 modifier = Modifier
                     .size(72.dp)
                     .clip(CircleShape)
-                    .background(ObsidianElevated)
-                    .border(1.5.dp, EmeraldAccent, CircleShape),
+                    .background(colors.bentoCardElevated)
+                    .border(2.dp, EmeraldAccent, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -93,13 +92,13 @@ fun PinLockScreen(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
-                color = Color.White
+                color = colors.textPrimary
             )
 
             Text(
                 text = if (isError) "Incorrect PIN, please try again" else "Enter your 4-digit PIN to access accounts",
                 fontSize = 13.sp,
-                color = if (isError) ExpenseRose else Color(0xFF94A3B8),
+                color = if (isError) ExpenseRose else colors.textMuted,
                 textAlign = TextAlign.Center
             )
 
@@ -114,8 +113,8 @@ fun PinLockScreen(
                         modifier = Modifier
                             .size(16.dp)
                             .clip(CircleShape)
-                            .background(if (isFilled) EmeraldAccent else ObsidianElevated)
-                            .border(1.5.dp, if (isFilled) EmeraldAccent else Color(0xFF1F3325), CircleShape)
+                            .background(if (isFilled) EmeraldAccent else colors.bentoCardElevated)
+                            .border(1.5.dp, if (isFilled) EmeraldAccent else colors.bentoBorder, CircleShape)
                     )
                 }
             }
@@ -170,7 +169,7 @@ fun PinLockScreen(
                                         Icon(
                                             imageVector = Icons.Default.Backspace,
                                             contentDescription = "Backspace",
-                                            tint = Color.White,
+                                            tint = colors.textPrimary,
                                             modifier = Modifier.size(26.dp)
                                         )
                                     }
@@ -180,8 +179,8 @@ fun PinLockScreen(
                                         modifier = Modifier
                                             .size(72.dp)
                                             .clip(CircleShape)
-                                            .background(ObsidianElevated)
-                                            .border(1.dp, Color(0xFF1F3325), CircleShape)
+                                            .background(colors.bentoCardElevated)
+                                            .border(2.dp, colors.bentoBorder, CircleShape)
                                             .clickable { handleDigit(item) },
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -189,7 +188,7 @@ fun PinLockScreen(
                                             text = item,
                                             fontSize = 24.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.White
+                                            color = colors.textPrimary
                                         )
                                     }
                                 }

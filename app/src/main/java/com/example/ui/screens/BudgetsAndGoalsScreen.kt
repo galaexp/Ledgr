@@ -28,6 +28,7 @@ import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
 import com.example.ui.theme.IncomeGreen
 import com.example.ui.theme.WarningAmber
+import com.example.ui.theme.neoPopOnColor
 import com.example.viewmodel.CategoryBudgetProgress
 import com.example.viewmodel.LedgrViewModel
 import java.util.Locale
@@ -89,7 +90,7 @@ fun BudgetsAndGoalsScreen(
                         text = title,
                         fontSize = 12.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isSelected) EmeraldAccent.neoPopOnColor() else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

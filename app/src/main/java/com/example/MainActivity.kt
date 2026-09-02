@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LedgrMainApp(viewModel: LedgrViewModel) {
     var currentTab by remember { mutableStateOf(MainNavigationTab.HOME) }
+    val customColors = MaterialTheme.customColors
 
     val accounts by viewModel.accounts.collectAsState(initial = emptyList())
     val categories by viewModel.categories.collectAsState(initial = emptyList())
@@ -129,7 +130,7 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 2.sp,
                             fontSize = 18.sp,
-                            color = TextPrimaryDark
+                            color = customColors.textPrimary
                         )
                     }
                 },
@@ -144,8 +145,8 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ObsidianBg,
-                    titleContentColor = TextPrimaryDark
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = customColors.textPrimary
                 )
             )
         },
@@ -159,7 +160,7 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
                         showAddTransactionSheet = true
                     },
                     containerColor = CredMint,
-                    contentColor = ObsidianBg,
+                    contentColor = NeoPopPureBlack,
                     shape = CircleShape,
                     modifier = Modifier.size(56.dp)
                 ) {
@@ -172,10 +173,18 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
             }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = ObsidianSurface,
-                tonalElevation = 8.dp
-            ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(customColors.bentoBorderStrong)
+                )
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = customColors.textMuted,
+                    tonalElevation = 0.dp
+                ) {
                 listOf(
                     MainNavigationTab.HOME to ("Home" to Icons.Default.Home),
                     MainNavigationTab.TRANSACTIONS to ("Ledger" to Icons.Default.ReceiptLong),
@@ -192,7 +201,7 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = label,
-                                tint = if (isSelected) CredMint else TextSecondaryDark
+                                tint = if (isSelected) CredMint else customColors.textMuted
                             )
                         },
                         label = {
@@ -200,17 +209,18 @@ fun LedgrMainApp(viewModel: LedgrViewModel) {
                                 text = label,
                                 fontSize = 11.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) CredMint else TextSecondaryDark
+                                color = if (isSelected) CredMint else customColors.textMuted
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = CredMint.copy(alpha = 0.15f),
                             selectedIconColor = CredMint,
-                            unselectedIconColor = TextSecondaryDark,
+                            unselectedIconColor = customColors.textMuted,
                             selectedTextColor = CredMint,
-                            unselectedTextColor = TextSecondaryDark
+                            unselectedTextColor = customColors.textMuted
                         )
                     )
+                }
                 }
             }
         }

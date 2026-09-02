@@ -35,8 +35,7 @@ import com.example.data.model.CurrencyInfo
 import com.example.ui.components.BentoCard
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.EmeraldGlow
-import com.example.ui.theme.ObsidianBg
-import com.example.ui.theme.ObsidianSurface
+import com.example.ui.theme.neoPopOnColor
 import com.example.viewmodel.LedgrViewModel
 
 @Composable
@@ -139,7 +138,7 @@ fun LoginOnboardingScreen(
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
-                                    tint = Color.White,
+                                    tint = EmeraldAccent.neoPopOnColor(),
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -147,7 +146,7 @@ fun LoginOnboardingScreen(
                                 text = label,
                                 fontSize = 12.sp,
                                 fontWeight = if (isCurrent || isPast) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isCurrent) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isCurrent) EmeraldAccent.neoPopOnColor() else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -271,7 +270,7 @@ fun LoginOnboardingScreen(
                                 text = "Next: Country & Currency →",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = EmeraldAccent.neoPopOnColor()
                             )
                         }
                     }
@@ -430,7 +429,7 @@ fun LoginOnboardingScreen(
                                             text = "${curr.code} (${curr.symbol})",
                                             fontSize = 12.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                            color = if (isSelected) EmeraldAccent.neoPopOnColor() else MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -535,7 +534,7 @@ fun LoginOnboardingScreen(
                                     text = "Launch Ledgr Home →",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = EmeraldAccent.neoPopOnColor()
                                 )
                             }
                         }

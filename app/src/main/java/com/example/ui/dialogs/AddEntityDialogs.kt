@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.*
 import com.example.ui.theme.EmeraldAccent
+import com.example.ui.theme.neoPopOnColor
 
 @Composable
 fun AddAccountDialog(
@@ -508,14 +509,15 @@ fun AddFriendDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     colorPalettes.forEach { colorHex ->
                         val isSelected = selectedColor == colorHex
+                        val swatchColor = Color(colorHex)
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .background(Color(colorHex))
+                                .background(swatchColor)
                                 .border(
                                     2.dp,
-                                    if (isSelected) Color.White else Color.Transparent,
+                                    if (isSelected) swatchColor.neoPopOnColor() else Color.Transparent,
                                     CircleShape
                                 )
                                 .clickable { selectedColor = colorHex }

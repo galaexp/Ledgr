@@ -11,6 +11,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.luminance
 import com.example.data.model.ThemePalette
 
 /**
@@ -121,6 +122,16 @@ val LocalCustomColors = staticCompositionLocalOf {
 /** Access custom NeoPOP tokens anywhere a [MaterialTheme] is in scope. */
 val MaterialTheme.customColors: CustomThemeColors
     @Composable @ReadOnlyComposable get() = LocalCustomColors.current
+
+/**
+ * Returns pure black or pure white — whichever reads legibly on top of
+ * this color. NeoPOP fills (lime, yellow, cyan, magenta, violet) vary a lot
+ * in brightness, so foreground text/icon color must be computed per-fill
+ * rather than hardcoded — this is what prevents "white text on yellow"
+ * style contrast failures.
+ */
+fun Color.neoPopOnColor(): Color =
+    if (this.luminance() > 0.5f) NeoPopPureBlack else NeoPopPureWhite
 
 // ──────────────────────────────────────────────────────────────
 // Color scheme factories

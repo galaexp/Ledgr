@@ -29,6 +29,7 @@ import com.example.ui.components.FriendAvatar
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
 import com.example.ui.theme.LocalCustomColors
+import com.example.ui.theme.neoPopOnColor
 import java.util.Locale
 import kotlin.math.abs
 
@@ -116,7 +117,7 @@ fun SettleUpBottomSheet(
                         text = "You paid ${selectedFriend?.name ?: "Friend"}",
                         fontSize = 12.sp,
                         fontWeight = if (youPaidFriend) FontWeight.Bold else FontWeight.Medium,
-                        color = if (youPaidFriend) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (youPaidFriend) ExpenseRose.neoPopOnColor() else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -133,7 +134,7 @@ fun SettleUpBottomSheet(
                         text = "${selectedFriend?.name ?: "Friend"} paid You",
                         fontSize = 12.sp,
                         fontWeight = if (!youPaidFriend) FontWeight.Bold else FontWeight.Medium,
-                        color = if (!youPaidFriend) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (!youPaidFriend) EmeraldAccent.neoPopOnColor() else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -248,7 +249,7 @@ fun SettleUpBottomSheet(
                     text = "Confirm Settlement ($${String.format(Locale.US, "%.2f", amountInput.toDoubleOrNull() ?: 0.0)})",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = Color.White
+                    color = EmeraldAccent.neoPopOnColor()
                 )
             }
 

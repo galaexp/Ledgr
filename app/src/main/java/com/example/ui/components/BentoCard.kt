@@ -68,7 +68,7 @@ fun BentoCard(
         )
     } else Modifier
 
-    Box(modifier = modifier.padding(end = depth, bottom = depth)) {
+    Box(modifier = modifier) {
         // Extrusion slab — solid flat block, fixed position, never moves.
         Box(
             modifier = Modifier
@@ -81,6 +81,7 @@ fun BentoCard(
         // Face — rests lifted by `depth`; slides onto the slab when pressed.
         Box(
             modifier = Modifier
+                .matchParentSize()
                 .offset(x = faceOffset, y = faceOffset)
                 .clip(shape)
                 .background(glowBrush ?: Brush.linearGradient(listOf(effectiveBg, effectiveBg)))

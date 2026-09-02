@@ -31,6 +31,7 @@ import com.example.ui.components.FriendAvatar
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
 import com.example.ui.theme.IncomeGreen
+import com.example.ui.theme.neoPopOnColor
 import com.example.viewmodel.LedgrViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -147,7 +148,7 @@ fun SplitsScreen(
                         text = title,
                         fontSize = 12.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isSelected) EmeraldAccent.neoPopOnColor() else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

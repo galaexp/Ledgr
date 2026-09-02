@@ -31,6 +31,7 @@ import com.example.ui.components.BentoCard
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
 import com.example.ui.theme.IncomeGreen
+import com.example.ui.theme.neoPopOnColor
 import com.example.viewmodel.DateFilterType
 import com.example.viewmodel.LedgrViewModel
 import java.text.SimpleDateFormat
@@ -285,7 +286,7 @@ fun TransactionsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ExpenseRose)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text("Delete", color = ExpenseRose.neoPopOnColor())
                 }
             },
             dismissButton = {

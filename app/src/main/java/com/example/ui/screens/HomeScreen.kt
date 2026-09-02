@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -96,10 +97,10 @@ import java.util.Locale
 // ──────────────────────────────────────────────────────────────
 // Design constants
 // ──────────────────────────────────────────────────────────────
-private val Elevation = 1.dp
+private val Elevation = 2.dp
 private val SectionSpacing = 16.dp
-private val CardRadius = 18.dp
-private val PillRadius = 20.dp
+private val CardRadius = 6.dp
+private val PillRadius = 8.dp
 private object HomeEntrance {
     val Visible = tween<Float>(220, easing = LinearOutSlowInEasing)
     val Slide = tween<Float>(260, easing = LinearOutSlowInEasing)
@@ -162,9 +163,9 @@ fun HomeScreen(
     val txDateFormat = remember { SimpleDateFormat("MMM dd, HH:mm", Locale.US) }
 
     // ── Dialogs ─────────────────────────────────────────────────
-    if (accountToEdit != null) {
+    accountToEdit?.let { current ->
         EditAccountDialog(
-            account = accountToEdit!!,
+            account = current,
             onDismiss = { accountToEdit = null },
             onSave = { updated ->
                 viewModel.updateAccount(updated)
@@ -407,15 +408,8 @@ private fun NetWorthHeroCard(
     val colors = MaterialTheme.customColors
     BentoCard(
         modifier = Modifier.fillMaxWidth(),
-        glowBrush = Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF161E2E).copy(alpha = 0.8f),
-                Color(0xFF0C1018).copy(alpha = 0.98f)
-            )
-        ),
-        borderBrush = Brush.linearGradient(
-            listOf(CredMint.copy(alpha = 0.5f), colors.bentoBorder, CredIndigo.copy(alpha = 0.3f))
-        )
+        backgroundColor = colors.bentoCardElevated,
+        borderColor = CredMint
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -557,47 +551,57 @@ private fun QuickActionTile(
     val colors = MaterialTheme.customColors
     val interaction = remember { MutableInteractionSource() }
     val isPressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(120),
-        label = "press_scale"
+    val depth = 4.dp
+    val faceOffset by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isPressed) depth else 0.dp,
+        animationSpec = tween(90),
+        label = "quick_action_press"
     )
 
-    Surface(
-        modifier = modifier
-            .scale(scale)
-            .clip(RoundedCornerShape(CardRadius))
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .semantics { contentDescription = label },
-        shape = RoundedCornerShape(CardRadius),
-        color = colors.bentoCardBg,
-        border = BorderStroke(
-            Elevation,
-            Brush.verticalGradient(listOf(color.copy(alpha = 0.5f), colors.bentoBorder))
+    Box(modifier = modifier) {
+        // Extrusion slab
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(x = depth, y = depth)
+                .clip(RoundedCornerShape(CardRadius))
+                .background(colors.extrusionShadow)
         )
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 14.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Face
+        Surface(
+            modifier = Modifier
+                .offset(x = faceOffset, y = faceOffset)
+                .clip(RoundedCornerShape(CardRadius))
+                .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+                .semantics { contentDescription = label },
+            shape = RoundedCornerShape(CardRadius),
+            color = colors.bentoCardBg,
+            border = BorderStroke(2.dp, color)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.15f))
-                    .border(Elevation, color.copy(alpha = 0.3f), CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(vertical = 14.dp, horizontal = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(color),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = icon, contentDescription = null, tint = color.neoPopOnColor(), modifier = Modifier.size(18.dp))
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = label,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textPrimary,
+                    maxLines = 1
+                )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = colors.textPrimary,
-                maxLines = 1
-            )
         }
     }
 }
@@ -664,23 +668,15 @@ fun AccountCardItem(
         modifier = Modifier
             .width(190.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(6.dp))
             .clickable(interactionSource = interaction, indication = null, onClick = onEditClick),
-        shape = RoundedCornerShape(18.dp),
-        color = colors.bentoCardBg,
-        border = BorderStroke(
-            Elevation,
-            Brush.linearGradient(listOf(cardColor.copy(alpha = 0.6f), colors.bentoBorder))
-        )
+        shape = RoundedCornerShape(6.dp),
+        color = colors.bentoCardElevated,
+        border = BorderStroke(2.dp, cardColor)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(cardColor.copy(alpha = 0.12f), Color(0xFF0F141E))
-                    )
-                )
                 .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -791,9 +787,7 @@ private fun SpendingPaceCard(
     }
 
     BentoCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth(),
         onClick = onClick
     ) {
         Row(

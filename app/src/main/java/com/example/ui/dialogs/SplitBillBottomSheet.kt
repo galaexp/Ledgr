@@ -29,6 +29,7 @@ import com.example.ui.components.FriendAvatar
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
 import com.example.ui.theme.LocalCustomColors
+import com.example.ui.theme.neoPopOnColor
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -250,7 +251,7 @@ fun SplitBillBottomSheet(
                                 text = label,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isSelected) EmeraldAccent.neoPopOnColor() else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -547,7 +548,7 @@ fun SplitBillBottomSheet(
                         text = "Confirm & Split Bill ($${String.format(Locale.US, "%.2f", totalAmount)})",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = EmeraldAccent.neoPopOnColor()
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))

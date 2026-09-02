@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.EmeraldAccent
 import com.example.ui.theme.ExpenseRose
-import com.example.ui.theme.ObsidianBg
+import com.example.ui.theme.customColors
 
 @Composable
 fun FriendAvatar(
@@ -36,6 +37,7 @@ fun FriendAvatar(
         .ifEmpty { "F" }
 
     val bgColor = Color(avatarColorHex)
+    val surfaceColor = MaterialTheme.customColors.bentoCardBg
 
     Box(
         modifier = modifier.size(size),
@@ -67,7 +69,7 @@ fun FriendAvatar(
                     .offset(x = 1.dp, y = 1.dp)
                     .clip(CircleShape)
                     .background(badgeColor)
-                    .border(2.dp, ObsidianBg, CircleShape)
+                    .border(2.dp, surfaceColor, CircleShape)
             )
         }
     }
